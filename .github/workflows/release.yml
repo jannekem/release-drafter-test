@@ -21,16 +21,26 @@ jobs:
         id: release-drafter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create release commit
+      - name: Update version.txt
         run: |
           NEW_VERSION=$(echo "${{ steps.release-drafter.outputs.tag_name }}" | sed 's/v//')
           sed -i 's/\(^version = \).*/\1"'${NEW_VERSION}'"/' version.txt
+      - name: Build project
+        run: |
+          echo "Building version ${{ steps.release-drafter.outputs.tag_name }}" > build.txt
+      - name: Commit version.txt
+        run: |
           git add version.txt
           git commit -m "chore: release ${{ steps.release-drafter.outputs.tag_name }}" && git push || echo "Version already up to date"
       - name: Create release draft again to include the new commit
         uses: release-drafter/release-drafter@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release asset
+        uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.release-drafter.outputs.upload_url }}
+          asset_path: build.txt
       - name: Publish release
         uses: actions/github-script@v6
         with:
