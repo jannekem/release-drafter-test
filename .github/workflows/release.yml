@@ -23,7 +23,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release commit
         run: |
-          echo "${{ steps.release-drafter.outputs.tag_name }}" > version.txt
+          NEW_VERSION=$(echo "${{ steps.release-drafter.outputs.tag_name }}" | sed 's/v//')
+          sed -i 's/\(version = \).*/\1"'${NEW_VERSION}'"/' version.txt
           git add version.txt
           git commit -m "chore: release ${{ steps.release-drafter.outputs.tag_name }}"
           git push
