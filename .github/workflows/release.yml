@@ -37,12 +37,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
-            const draftRelease = await github.repos.getReleaseByTag({
+            const draftRelease = await github.rest.repos.getReleaseByTag({
               owner,
               repo,
               tag: "${{ steps.release-drafter.outputs.tag_name }}",
             });
-            await github.repos.updateRelease({
+            await github.rest.repos.updateRelease({
               owner,
               repo,
               release_id: draftRelease.data.id,
