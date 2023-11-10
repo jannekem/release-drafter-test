@@ -26,8 +26,7 @@ jobs:
           NEW_VERSION=$(echo "${{ steps.release-drafter.outputs.tag_name }}" | sed 's/v//')
           sed -i 's/\(version = \).*/\1"'${NEW_VERSION}'"/' version.txt
           git add version.txt
-          git commit -m "chore: release ${{ steps.release-drafter.outputs.tag_name }}"
-          git push
+          git commit -m "chore: release ${{ steps.release-drafter.outputs.tag_name }}" && git push || echo "Version already up to date"
       - name: Create release draft again to include the new commit
         uses: release-drafter/release-drafter@v5
         env:
