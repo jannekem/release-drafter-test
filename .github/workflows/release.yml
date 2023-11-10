@@ -1,0 +1,50 @@
+name: Build release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - uses: release-drafter/release-drafter@v5
+        id: release-drafter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release commit
+        run: |
+          echo "v${{ steps.release-drafter.outputs.tag_name }}" > version.txt
+          git add version.txt
+          git commit -m "Release v${{ steps.release-drafter.outputs.tag_name }}"
+          git push
+      - name: Create release draft again to include the new commit
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const draftRelease = await github.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag: "v${{ steps.release-drafter.outputs.tag_name }}",
+            });
+            await github.repos.updateRelease({
+              owner,
+              repo,
+              release_id: draftRelease.data.id,
+              draft: false,
+            });
